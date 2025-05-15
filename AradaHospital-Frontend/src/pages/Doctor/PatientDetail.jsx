@@ -98,7 +98,7 @@ const PatientDetail = () => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        console.log(patientRes)
+      
        
         
         if (!patientRes.ok) throw new Error("Failed to fetch patient profile");
@@ -135,6 +135,7 @@ const PatientDetail = () => {
           const prescriptionsData = await prescriptionsRes.json();
           setPrescriptions(prescriptionsData.data || []);
 
+          console.log("Prescriptions Data:", patientData);
           const labsRes = await fetch(
             `${BASE_URL}/records/${patientData.data.currentVisit.recordId}/lab-requests`, 
             { 
@@ -649,99 +650,6 @@ const PatientDetail = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3 border-b">
-            <CardTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-blue-600" />
-              <span>Hospital Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">
-                Registered Hospitals
-              </h3>
-              <div className="space-y-3">
-                {patient.hospitalInfo.registeredHospitals?.length > 0 ? (
-                  patient.hospitalInfo.registeredHospitals.map((hospital) => (
-                    <div
-                      key={hospital._id}
-                      className="bg-gray-50 rounded-lg p-4 border"
-                    >
-                      <p className="font-medium">{hospital.name}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {hospital.location}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {hospital.registrationDate &&
-                          `Registered on ${safeFormat(
-                            hospital.registrationDate,
-                            "PPP"
-                          )}`}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="font-medium">No registered hospitals</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  Primary Care Physician
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  {patient.hospitalInfo.assignedDoctor ? (
-                    <>
-                      <p className="font-medium">
-                        Dr. {patient.hospitalInfo.assignedDoctor.firstName}{" "}
-                        {patient.hospitalInfo.assignedDoctor.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {patient.hospitalInfo.assignedDoctor.specialization}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {patient.hospitalInfo.assignedDoctor.department}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="font-medium">No assigned doctor</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  Insurance Information
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  {patient.hospitalInfo.insurance ? (
-                    <>
-                      <p className="font-medium">
-                        {patient.hospitalInfo.insurance.provider}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Policy #: {patient.hospitalInfo.insurance.policyNumber}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Expires:{" "}
-                        {safeFormat(
-                          patient.hospitalInfo.insurance.expirationDate,
-                          "PPP"
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="font-medium">No insurance information</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </TabsContent>
 
       {/* Current Record Tab */}

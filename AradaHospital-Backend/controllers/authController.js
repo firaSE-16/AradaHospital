@@ -2,86 +2,17 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const generateToken = require("../lib/utils");
 
+const dotevn = require("dotenv");
+dotevn.config();
 
- 
-const signup = async (req, res) => {
-  try {
-    const {
-      email,
-      password,
-      firstName,
-      lastName,
-      dateOfBirth,
-      gender,
-      role,
-    } = req.body;
 
-    // Validate required fields
-    if (
-      !email ||
-      !password ||
-      !firstName ||
-      !lastName ||
-      !dateOfBirth ||
-      !gender ||
-      !role
-    ) {
-      return res.status(400).json({
-        success: false,
-        msg: "All fields are required",
-      });
-    }
-
-    // Check if user with same email and role already exists
-    const existingUser = await User.findOne({ email, role });
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        msg: "User already exists with this email and role",
-      });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      dateOfBirth,
-      gender,
-      role,
-    });
-
-    await newUser.save();
-
-    // Generate token
-    generateToken(newUser._id, newUser.hospitalId, newUser.role, res);
-
-    // Return success response
-    res.status(201).json({
-      success: true,
-      userId: newUser._id,
-      email: newUser.email,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      gender: newUser.gender,
-      role: newUser.role,
-    });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({
-      success: false,
-      msg: "Internal server error. Please try again later.",
-    });
-  }
-};
 
  
 
 const login = async (req, res) => {
+  console.log("Login request received:", req.body);
+  
+  
   try {
     const { email, password, role } = req.body;
  
@@ -94,6 +25,7 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+  
 
     if (!user) {
       return res.status(404).json({
@@ -118,7 +50,9 @@ const login = async (req, res) => {
       });
     }
 
-    generateToken(user._id, user.hospitalID, user.role, res);
+    hospitalID = process.env.HOSPITAL_ID;
+
+    generateToken(user._id, hospitalID, user.role, res);
 
     res.status(200).json({
       success: true,
@@ -158,4 +92,20 @@ const auth = (req, res) => {
 };
 
 
-module.exports = { login,signup,auth };
+ 
+const logout = (req, res) => {
+  // Clear the JWT cookie
+  console.log("fffffffffffffffffff");
+  
+res.clearCookie("jwt", {
+  httpOnly: true,
+  sameSite: "strict",
+  secure: true,
+  path: "/", // include path if not otherwise scoped
+});
+
+  res.status(200).json({ message: "Logged out successfully" });
+};
+
+
+module.exports = { login,auth ,logout};

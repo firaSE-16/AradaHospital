@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle,
-  CardFooter
-} from "../../components/ui/card";
-import { 
   Search,
   User,
   Stethoscope,
@@ -16,13 +8,24 @@ import {
   ArrowRight,
   Loader2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  PlusCircle,
+  Filter,
+  ChevronRight,
+  Calendar,
+  HeartPulse
 } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "react-toastify";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
 
 const BASE_URL = "http://localhost:5500";
 
@@ -32,6 +35,7 @@ const AssignedRecords = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,7 +44,6 @@ const AssignedRecords = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch user's basic information
         const authRes = await fetch(`${BASE_URL}/api/auth/me`, {
           credentials: "include",
           headers: {
@@ -50,7 +53,6 @@ const AssignedRecords = () => {
         if (!authRes.ok) throw new Error("Failed to fetch user info");
         const authData = await authRes.json();
 
-        // Get doctor info
         const doctorRes = await fetch(`${BASE_URL}/api/doctors/getStaffAccount/${authData.userId}`, {
           credentials: "include",
           headers: {
@@ -61,7 +63,6 @@ const AssignedRecords = () => {
         if (!doctorRes.ok) throw new Error("Failed to fetch doctor information");
         setDoctorInfo(await doctorRes.json());
 
-        // Fetch assigned medical records
         const recordsRes = await fetch(`${BASE_URL}/api/doctors/patients`, { 
           credentials: "include",
           headers: {
@@ -74,16 +75,17 @@ const AssignedRecords = () => {
         const recordsData = await recordsRes.json();
         setAssignedRecords(recordsData.data.map(record => ({
           ...record.patientID,
-          patientId:record._id,
+          patientId: record._id,
           medicalRecordId: record.medicalRecordId,
           recordStatus: record.status,
           firstName: record.firstName,
-          lastName:record.lastName,
+          lastName: record.lastName,
           faydaID: record.faydaID,
           gender: record.gender,
           age: record.age,
+          lastVisit: record.updatedAt ? new Date(record.updatedAt).toLocaleDateString() : 'N/A',
+          condition: record.condition || 'Not specified'
         })));
-        console.log(recordsData.data);
       } catch (error) {
         console.error("Fetch error:", error);
         setError(error.message);
@@ -103,28 +105,32 @@ const AssignedRecords = () => {
 
   const filteredRecords = assignedRecords.filter(record => 
     `${record.firstName} ${record.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (record.faydaID && record.faydaID.toLowerCase().includes(searchTerm.toLowerCase()))
+    (record.faydaID && record.faydaID.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (record.medicalRecordId && record.medicalRecordId.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleViewRecord = (patientId) => {
     navigate(`/doctor/records/${patientId}`);
   };
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      Active: "bg-green-100 text-green-800",
-      "In-Treatment": "bg-blue-100 text-blue-800",
-      "InTreatment": "bg-blue-100 text-blue-800",
-      Discharged: "bg-purple-100 text-purple-800",
-      Emergency: "bg-red-100 text-red-800",
-      default: "bg-gray-100 text-gray-800"
-    };
-    return variants[status] || variants.default;
+  const getStatusVariant = (status) => {
+    switch(status) {
+      case 'Active':
+      case 'InTreatment':
+      case 'In-Treatment':
+        return 'default';
+      case 'Emergency':
+        return 'destructive';
+      case 'Discharged':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
   };
 
   const refreshData = async () => {
     try {
-      setLoading(true);
+      setRefreshing(true);
       setError(null);
       
       const recordsRes = await fetch(`${BASE_URL}/api/doctors/patients`, { 
@@ -139,26 +145,42 @@ const AssignedRecords = () => {
       const recordsData = await recordsRes.json();
       setAssignedRecords(recordsData.data.map(record => ({
         ...record.patientID,
-        medicalRecordId: record._id,
-        recordStatus: record.status
+        patientId: record._id,
+        medicalRecordId: record.medicalRecordId,
+        recordStatus: record.status,
+        firstName: record.firstName,
+        lastName: record.lastName,
+        faydaID: record.faydaID,
+        gender: record.gender,
+        age: record.age,
+        lastVisit: record.updatedAt ? new Date(record.updatedAt).toLocaleDateString() : 'N/A',
+        condition: record.condition || 'Not specified'
       })));
+      toast.success("Records refreshed successfully");
     } catch (error) {
       console.error("Refresh error:", error);
       setError(error.message);
       toast.error(error.message);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   };
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <h2 className="text-xl font-semibold">Error Loading Data</h2>
-        <p className="text-muted-foreground">{error}</p>
-        <Button onClick={refreshData}>
-          <Loader2 className="h-4 w-4 mr-2" /> Retry
+      <div className="flex flex-col items-center justify-center h-screen gap-4 p-6">
+        <div className="bg-red-100 p-4 rounded-full">
+          <AlertCircle className="h-10 w-10 text-red-600" />
+        </div>
+        <h2 className="text-2xl font-bold">Something went wrong</h2>
+        <p className="text-muted-foreground text-center max-w-md">{error}</p>
+        <Button onClick={refreshData} disabled={refreshing} className="mt-4">
+          {refreshing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Try Again
         </Button>
       </div>
     );
@@ -166,18 +188,42 @@ const AssignedRecords = () => {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-[200px]" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-[120px] w-full" />
+      <div className="p-6 space-y-8">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl p-4 shadow-sm border">
+              <Skeleton className="h-6 w-24 mb-2" />
+              <Skeleton className="h-8 w-full mb-1" />
+              <Skeleton className="h-4 w-32" />
+            </div>
           ))}
         </div>
+        
         <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <div className="grid grid-cols-1 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-[60px] w-full" />
+          <div className="flex justify-between">
+            <Skeleton className="h-6 w-36" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -186,183 +232,180 @@ const AssignedRecords = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-6 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Patient Records</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your assigned patients and their medical records
+          <h1 className="text-3xl font-bold text-gray-900">My Patients</h1>
+          <p className="text-gray-500 mt-1">
+            {doctorInfo && `Dr. ${doctorInfo.firstName} ${doctorInfo.lastName} • ${doctorInfo.specialization}`}
           </p>
         </div>
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search patients..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" className="gap-1">
+            <PlusCircle className="h-4 w-4" />
+            New Patient
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={refreshData}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Doctor Profile</CardTitle>
-            <Stethoscope className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              Dr. {doctorInfo?.firstName} {doctorInfo?.lastName}
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Patients</p>
+              <p className="text-2xl font-bold mt-1">{assignedRecords.length}</p>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {doctorInfo?.specialization}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Patients</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{assignedRecords.length}</div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Patients under your care
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Treatments</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assignedRecords.filter(p => p.recordStatus === "InTreatment").length}
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <User className="h-5 w-5 text-blue-600" />
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Currently in treatment
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Active Cases</p>
+              <p className="text-2xl font-bold mt-1">
+                {assignedRecords.filter(p => p.recordStatus === "InTreatment" || p.recordStatus === "In-Treatment").length}
+              </p>
+            </div>
+            <div className="bg-green-100 p-2 rounded-lg">
+              <Activity className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Emergency</p>
+              <p className="text-2xl font-bold mt-1">
+                {assignedRecords.filter(p => p.recordStatus === "Emergency").length}
+              </p>
+            </div>
+            <div className="bg-red-100 p-2 rounded-lg">
+              <HeartPulse className="h-5 w-5 text-red-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Discharged</p>
+              <p className="text-2xl font-bold mt-1">
+                {assignedRecords.filter(p => p.recordStatus === "Discharged").length}
+              </p>
+            </div>
+            <div className="bg-purple-100 p-2 rounded-lg">
+              <Stethoscope className="h-5 w-5 text-purple-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Records Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Patient Records</CardTitle>
-              <CardDescription>
-                {filteredRecords.length} record(s) found
-              </CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={refreshData}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
-              Refresh
-            </Button>
+      {/* Search and Filter */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Search patients by name, ID or record number..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          {filteredRecords.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Patient
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fayda ID
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Gender
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Record ID
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRecords.map((record) => (
-                    <tr key={record.medicalRecordId} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {record.firstName} {record.lastName}
-                            </div>
-                            
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{record.faydaID}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{record.gender}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={getStatusBadge(record.recordStatus)}>
+          <Button variant="outline" className="gap-1">
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Patients List */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="font-semibold text-lg">Patient Records</h2>
+          <p className="text-sm text-gray-500">
+            Showing {filteredRecords.length} of {assignedRecords.length} patients
+          </p>
+        </div>
+
+        {filteredRecords.length > 0 ? (
+          <div className="space-y-3">
+            {filteredRecords.map((record) => (
+              <div 
+                key={record.medicalRecordId} 
+                className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleViewRecord(record.patientId)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarFallback>
+                        {record.firstName?.charAt(0)}{record.lastName?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-medium">
+                        {record.firstName} {record.lastName}
+                      </h3>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <Badge variant={getStatusVariant(record.recordStatus)}>
                           {record.recordStatus}
                         </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-mono">
-                          {record.medicalRecordId.substring(0, 8)}...
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                          {record.lastVisit}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleViewRecord(record.patientId)}
-                        >
-                          View <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <User className="h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">
-                {searchTerm ? "No matching records found" : "No records assigned yet"}
-              </p>
-              <Button variant="outline" onClick={refreshData}>
-                Refresh
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        <div className="text-sm text-gray-500">
+                          {record.faydaID || 'No Fayda ID'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right hidden md:block">
+                      <p className="text-sm text-gray-500">Condition</p>
+                      <p className="font-medium">{record.condition}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
+            <FileText className="h-10 w-10 mx-auto text-gray-400" />
+            <h3 className="mt-4 font-medium text-gray-900">
+              {searchTerm ? "No patients found" : "No patients assigned"}
+            </h3>
+            <p className="mt-1 text-gray-500">
+              {searchTerm ? "Try adjusting your search" : "You currently have no patients assigned to your care"}
+            </p>
+            <Button variant="outline" className="mt-4" onClick={() => setSearchTerm('')}>
+              {searchTerm ? "Clear search" : "Refresh"}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -20,6 +20,7 @@ const userSchema = new Schema(
         "LabTechnician",
         "Pharmacist",
       ],
+      default: "User",
       required: true,
     },
   },

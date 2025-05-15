@@ -111,16 +111,12 @@ export default function AddStaffForm() {
   }, []);
 
   const onSubmit = async (data) => {
-    if (!currentUser?.hospitalId) {
-      toast.error("Hospital information not found");
-      return;
-    }
+    
 
     setLoading(true);
     try {
       const staffData = {
         ...data,
-        hospitalID: currentUser.hospitalId,
         ...(data.role !== "Doctor" && { specialization: undefined }),
       };
       console.log("🚀 ~ onSubmit ~ staffData:", staffData)

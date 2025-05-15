@@ -15,7 +15,6 @@ const getStaffAccount = async (req, res) => {
 
     // Find the doctor and populate the hospital information
     const doctor = await Doctor.findById(id)
-      .populate('hospitalID', 'name location contactNumber')
       .populate('assignedPatientID', 'faydaID firstName lastName status');
 
     if (!doctor) {
@@ -34,7 +33,7 @@ const getStaffAccount = async (req, res) => {
       contactNumber: doctor.contactNumber,
       address: doctor.address,
       specialization: doctor.specialization,
-      hospital: doctor.hospitalID,
+      
       assignedPatients: doctor.assignedPatientID,
       createdAt: doctor.createdAt,
       updatedAt: doctor.updatedAt
@@ -137,10 +136,7 @@ const getPatientProfile = async (req, res) => {
         path: 'assignedDoctor',
         select: 'firstName lastName specialization'
       })
-      .populate({
-        path: 'registeredHospital',
-        select: 'name location contactNumber'
-      })
+      
       .lean();
 
     if (!patient) {
@@ -195,10 +191,7 @@ const getPatientProfile = async (req, res) => {
             allergies: patient.allergies || []
           },
           emergencyContact: patient.emergencyContact,
-          hospitalInfo: {
-            registeredHospitals: patient.registeredHospital,
-            assignedDoctor: patient.assignedDoctor
-          }
+         
         },
         currentVisit: currentRecord ? {
           recordId: currentRecord._id,
@@ -327,13 +320,11 @@ const getPatientMedicalHistory = async (req, res) => {
     .populate('triageData.staffID', 'firstName lastName role')
     .populate({
       path: 'doctorNotes.prescriptions',
-      populate: {
-        path: 'medicineList.medicine',
-        model: 'Medicine'
-      }
+     
     })
     .populate('labRequests')
     .lean();
+    console.log("Medical Records:", records);
 
     // Get basic patient info
     const patient = await Patient.findById(patientId)

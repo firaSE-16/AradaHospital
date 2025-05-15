@@ -5,18 +5,11 @@ const Patient = require('../models/Patient');
 // Get all lab requests for the technician's hospital
 const getLabRequests = async (req, res) => {
   try {
-    const { hospitalID } = req.user.hospitalID;
-    console.log(req.user.hospitalID) // Using hospitalID from the authenticated user
+   
+
     
-    let query = { 
-      'patientID.registeredHospital': hospitalID 
-    };
 
-    if (req.query.status) {
-      query.status = req.query.status;
-    }
-
-    let labRequests = await LabRequest.find(query)
+    let labRequests = await LabRequest.find()
       .populate({
         path: 'patientID',
         select: 'faydaID firstName lastName gender dateOfBirth',
@@ -110,11 +103,12 @@ const updateLabResults = async (req, res) => {
 const getCurrentLabTechnicianAccount = async (req, res) => {
   try {
     const technician = await LabTechnician.findById(req.user._id)
-      .populate('hospitalID', 'name location contactNumber');
+      
 
     if (!technician) {
       return res.status(404).json({ message: "Lab technician not found" });
     }
+    const hospitalID = process.env.HOSPITAL_ID
 
     res.status(200).json({
       _id: technician._id,
@@ -126,7 +120,7 @@ const getCurrentLabTechnicianAccount = async (req, res) => {
       role: technician.role,
       contactNumber: technician.contactNumber,
       address: technician.address,
-      hospital: technician.hospitalID,
+
       createdAt: technician.createdAt,
       updatedAt: technician.updatedAt
     });

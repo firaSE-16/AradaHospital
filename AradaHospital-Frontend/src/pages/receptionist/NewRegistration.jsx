@@ -12,7 +12,8 @@ import {
   Typography,
   Spin,
   Alert,
-  Space
+  Space,
+  Divider
 } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
@@ -27,7 +28,6 @@ const NewRegistration = () => {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hospitalID, setHospitalID] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,13 +41,6 @@ const NewRegistration = () => {
         
         const userData = await userRes.json();
         console.log(userData)
-
-        if (!userData.hospitalId) {
-          throw new Error("Hospital ID not found in user data");
-        }
-        
-        
-        setHospitalID(userData.hospitalId);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching user data:', err);
@@ -60,18 +53,12 @@ const NewRegistration = () => {
   }, []);
 
   const onFinish = async (values) => {
-    if (!hospitalID) {
-      message.error('Hospital ID is missing. Please try again later.');
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
     
     try {
       const formattedData = {
         ...values,
-        hospitalID,
         dateOfBirth: values.dateOfBirth.format('YYYY-MM-DD'),
         emergencyContact: {
           name: values.emergencyContact?.name || '',
@@ -137,7 +124,8 @@ const NewRegistration = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        background: 'linear-gradient(to bottom, #1A4E6B, #0D2C3E)'
       }}>
         <Spin size="large" tip="Loading registration form..." />
       </div>
@@ -146,38 +134,66 @@ const NewRegistration = () => {
 
   if (error) {
     return (
-      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <Alert
-          message="Initialization Error"
-          description={error}
-          type="error"
-          showIcon
-          closable
-          style={{ marginBottom: '24px' }}
-        />
-        <Button 
-          type="primary" 
-          onClick={() => window.location.reload()}
-          style={{ marginRight: '16px' }}
+      <div style={{ 
+        padding: '24px', 
+        maxWidth: '1200px', 
+        margin: '0 auto',
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom, #1A4E6B, #0D2C3E)'
+      }}>
+        <Card
+          style={{ 
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.16)'
+          }}
         >
-          Try Again
-        </Button>
-        <Button onClick={() => navigate('/receptionist/registration')}>
-          Back to Dashboard
-        </Button>
+          <Alert
+            message="Initialization Error"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            style={{ marginBottom: '24px' }}
+          />
+          <Space>
+            <Button 
+              type="primary" 
+              onClick={() => window.location.reload()}
+              style={{ marginRight: '16px' }}
+            >
+              Try Again
+            </Button>
+            <Button onClick={() => navigate('/receptionist/registration')}>
+              Back to Dashboard
+            </Button>
+          </Space>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ 
+      padding: '24px', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom, #1A4E6B, #0D2C3E)'
+    }}>
       <Card 
         title={
-          <Space>
-            <Title level={3} style={{ margin: 0 }}>New Patient Registration</Title>
-            <Text type="secondary" style={{ fontSize: '14px' }}>
-              Hospital ID: {hospitalID}
+          <Space direction="vertical" size={0}>
+            <Text style={{ 
+              fontSize: '12px', 
+              textTransform: 'uppercase', 
+              letterSpacing: '1px',
+              color: '#7f8fa4'
+            }}>
+              Patient Registration
             </Text>
+            <Title level={3} style={{ margin: 0, color: '#1A4E6B' }}>
+              New Patient Form
+            </Title>
           </Space>
         }
         bordered={false}
@@ -185,13 +201,26 @@ const NewRegistration = () => {
           <Button 
             type="default" 
             onClick={() => navigate('/receptionist/registration')}
-            style={{ borderRadius: '4px' }}
+            style={{ 
+              borderRadius: '6px',
+              fontWeight: '500'
+            }}
           >
             Back to Patient Search
           </Button>
         }
-        headStyle={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '16px' }}
-        bodyStyle={{ padding: '24px 0' }}
+        headStyle={{ 
+          borderBottom: 'none',
+          padding: '24px 24px 0'
+        }}
+        bodyStyle={{ 
+          padding: '16px 24px 24px'
+        }}
+        style={{
+          borderRadius: '12px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.16)',
+          overflow: 'hidden'
+        }}
       >
         {error && (
           <Alert 
@@ -201,7 +230,10 @@ const NewRegistration = () => {
             showIcon
             closable
             onClose={() => setError(null)}
-            style={{ marginBottom: '24px' }}
+            style={{ 
+              marginBottom: '24px',
+              borderRadius: '8px'
+            }}
           />
         )}
 
@@ -215,14 +247,38 @@ const NewRegistration = () => {
               gender: 'Male'
             }}
           >
-            <Title level={4} style={{ marginBottom: '24px', color: '#1890ff' }}>
-              Basic Information
-            </Title>
+            <div style={{ 
+              background: '#f8f9fa', 
+              padding: '16px 24px',
+              borderRadius: '8px',
+              marginBottom: '24px'
+            }}>
+              <Title level={5} style={{ 
+                margin: 0,
+                color: '#1A4E6B',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  background: '#1A4E6B',
+                  color: 'white',
+                  borderRadius: '50%',
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  fontSize: '14px'
+                }}>1</span>
+                Basic Information
+              </Title>
+            </div>
             
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
-                  label="Fayda ID"
+                  label={<Text strong>Fayda ID</Text>}
                   name="faydaID"
                   rules={[
                     { required: true },
@@ -234,18 +290,18 @@ const NewRegistration = () => {
                     placeholder="Enter unique Fayda ID" 
                     size="large" 
                     allowClear
-                    prefix={<i className="anticon anticon-idcard" />}
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label="Date of Birth"
+                  label={<Text strong>Date of Birth</Text>}
                   name="dateOfBirth"
                   rules={[{ required: true, message: 'Please select date of birth!' }]}
                 >
                   <DatePicker 
-                    style={{ width: '100%' }} 
+                    style={{ width: '100%', borderRadius: '6px' }} 
                     size="large" 
                     disabledDate={current => current && current > moment().endOf('day')}
                     format="YYYY-MM-DD"
@@ -257,7 +313,7 @@ const NewRegistration = () => {
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
-                  label="First Name"
+                  label={<Text strong>First Name</Text>}
                   name="firstName"
                   rules={[
                     { required: true, message: 'Please input first name!' },
@@ -269,12 +325,13 @@ const NewRegistration = () => {
                     placeholder="Patient's first name" 
                     size="large" 
                     allowClear
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label="Last Name"
+                  label={<Text strong>Last Name</Text>}
                   name="lastName"
                   rules={[
                     { required: true, message: 'Please input last name!' },
@@ -286,6 +343,7 @@ const NewRegistration = () => {
                     placeholder="Patient's last name" 
                     size="large" 
                     allowClear
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
@@ -294,7 +352,7 @@ const NewRegistration = () => {
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
-                  label="Gender"
+                  label={<Text strong>Gender</Text>}
                   name="gender"
                   rules={[{ required: true }]}
                 >
@@ -302,6 +360,7 @@ const NewRegistration = () => {
                     placeholder="Select gender" 
                     size="large"
                     optionFilterProp="children"
+                    style={{ borderRadius: '6px' }}
                   >
                     <Option value="Male">Male</Option>
                     <Option value="Female">Female</Option>
@@ -311,7 +370,7 @@ const NewRegistration = () => {
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label="Contact Number"
+                  label={<Text strong>Contact Number</Text>}
                   name="contactNumber"
                   rules={[
                     { required: true },
@@ -324,13 +383,14 @@ const NewRegistration = () => {
                     size="large" 
                     allowClear
                     addonBefore="+1"
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
             <Form.Item
-              label="Full Address"
+              label={<Text strong>Full Address</Text>}
               name="address"
               rules={[
                 { required: true, message: 'Please input address!' },
@@ -345,17 +405,42 @@ const NewRegistration = () => {
                 allowClear
                 showCount
                 maxLength={200}
+                style={{ borderRadius: '6px' }}
               />
             </Form.Item>
 
-            <Title level={4} style={{ marginBottom: '24px', color: '#1890ff' }}>
-              Emergency Contact Information
-            </Title>
+            <div style={{ 
+              background: '#f8f9fa', 
+              padding: '16px 24px',
+              borderRadius: '8px',
+              margin: '32px 0 24px'
+            }}>
+              <Title level={5} style={{ 
+                margin: 0,
+                color: '#1A4E6B',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  background: '#1A4E6B',
+                  color: 'white',
+                  borderRadius: '50%',
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  fontSize: '14px'
+                }}>2</span>
+                Emergency Contact Information
+              </Title>
+            </div>
             
             <Row gutter={24}>
               <Col span={8}>
                 <Form.Item
-                  label="Full Name"
+                  label={<Text strong>Full Name</Text>}
                   name={['emergencyContact', 'name']}
                   rules={[
                     { required: true, message: 'Please input emergency contact name!' },
@@ -366,12 +451,13 @@ const NewRegistration = () => {
                     placeholder="Contact's full name" 
                     size="large" 
                     allowClear
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
               <Col span={8}>
                 <Form.Item
-                  label="Relationship"
+                  label={<Text strong>Relationship</Text>}
                   name={['emergencyContact', 'relation']}
                   rules={[{ required: true, message: 'Please select relationship!' }]}
                 >
@@ -379,6 +465,7 @@ const NewRegistration = () => {
                     placeholder="Select relationship" 
                     size="large"
                     optionFilterProp="children"
+                    style={{ borderRadius: '6px' }}
                   >
                     <Option value="Parent">Parent</Option>
                     <Option value="Spouse">Spouse</Option>
@@ -392,7 +479,7 @@ const NewRegistration = () => {
               </Col>
               <Col span={8}>
                 <Form.Item
-                  label="Phone Number"
+                  label={<Text strong>Phone Number</Text>}
                   name={['emergencyContact', 'phone']}
                   rules={[
                     { required: true },
@@ -405,17 +492,42 @@ const NewRegistration = () => {
                     size="large" 
                     allowClear
                     addonBefore="+1"
+                    style={{ borderRadius: '6px' }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Title level={4} style={{ marginBottom: '24px', color: '#1890ff' }}>
-              Medical Information
-            </Title>
+            <div style={{ 
+              background: '#f8f9fa', 
+              padding: '16px 24px',
+              borderRadius: '8px',
+              margin: '32px 0 24px'
+            }}>
+              <Title level={5} style={{ 
+                margin: 0,
+                color: '#1A4E6B',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  background: '#1A4E6B',
+                  color: 'white',
+                  borderRadius: '50%',
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  fontSize: '14px'
+                }}>3</span>
+                Medical Information
+              </Title>
+            </div>
 
             <Form.Item
-              label={<Text>Medical History <Text type="secondary">(Optional)</Text></Text>}
+              label={<Text strong>Medical History <Text type="secondary">(Optional)</Text></Text>}
               name="medicalHistory"
               rules={[
                 { max: 500, message: 'Medical history cannot exceed 500 characters' }
@@ -428,25 +540,34 @@ const NewRegistration = () => {
                 allowClear
                 showCount
                 maxLength={500}
+                style={{ borderRadius: '6px' }}
               />
             </Form.Item>
 
-            <Form.Item style={{ marginTop: '32px', textAlign: 'center' }}>
+            <Divider />
+
+            <Form.Item style={{ 
+              marginTop: '24px', 
+              textAlign: 'center' 
+            }}>
               <Button 
                 type="primary" 
                 htmlType="submit" 
                 loading={submitting}
                 size="large"
                 style={{ 
-                  width: '220px', 
-                  height: '44px', 
-                  borderRadius: '6px',
+                  width: '240px', 
+                  height: '48px', 
+                  borderRadius: '8px',
                   fontWeight: '500',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  background: 'linear-gradient(to right, #1A4E6B, #0D2C3E)',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(26, 78, 107, 0.3)'
                 }}
                 disabled={submitting}
               >
-                {submitting ? 'Processing Registration...' : 'Register Patient'}
+                {submitting ? 'Processing...' : 'Register Patient'}
               </Button>
             </Form.Item>
           </Form>

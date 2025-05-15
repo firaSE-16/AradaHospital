@@ -7,9 +7,9 @@ const hospitalAdminRoutes = require("./routes/hospitalAdminRoutes");
 const triageRoutes = require("./routes/triageRoutes");
 const labRoutes = require("./routes/labReqeustRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
-const systemAdminRoutes = require("./routes/systemAdminRoutes");
 const receptionistRoutes = require("./routes/receptionistRoute");
 const doctorRoutes = require( "./routes/doctorRoutes");
+const userRoutes = require( "./routes/userRoute");
 const authRoute = require("./routes/authRoute");
 
 const connectDB = require("./lib/db");
@@ -23,7 +23,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your frontend origin
+    origin: ["http://localhost:5173","http://localhost:5174"], // Your frontend origin
     credentials: true, // Allow credentials (cookies, authorization headers)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -32,13 +32,13 @@ app.use(
 app.use(cookieParser());
 
 app.use("/api/hospital-admin", hospitalAdminRoutes);
-app.use("/api/system-admin", systemAdminRoutes);
 app.use("/api/reception", receptionistRoutes);
 app.use("/api/triage", triageRoutes);
 app.use("/api/lab", labRoutes);
 app.use("/api/prescription", prescriptionRoutes);
 app.use("/api/auth", authRoute);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/user", userRoutes);
 
 
 app.post("/api/admin", async (req, res) => {

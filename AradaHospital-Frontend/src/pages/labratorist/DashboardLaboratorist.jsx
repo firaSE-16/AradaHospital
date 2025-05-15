@@ -54,7 +54,7 @@ const DashboardLaboratorist = () => {
                   Lab Technician
                 </Typography>
                 <Typography variant="body1">
-                  {technicianData.hospital?.name || 'Hospital not specified'}
+                  {"Arada Hospital"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {technicianData.email} | {technicianData.contactNumber}

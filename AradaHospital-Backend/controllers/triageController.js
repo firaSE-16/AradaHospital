@@ -6,20 +6,19 @@ const Triage = require('../models/Triage')
 // Get triage dashboard stats
 exports.getTriageStats = async (req, res) => {
   try {
-    const hospitalId = req.user.hospitalID
-    console.log("Hospital ID:", hospitalId)
+   
     
     const [unassigned, doctors, inTreatment] = await Promise.all([
       MedicalRecord.countDocuments({ 
-        hospitalID: hospitalId,
+      
         status: "Unassigned" 
       }),
       Doctor.countDocuments({ 
-        hospitalID: hospitalId,
+       
         status: "active" 
       }),
       Patient.countDocuments({ 
-        registeredHospital: hospitalId,
+        
         status: "InTreatment" 
       })
     ])
@@ -42,13 +41,13 @@ exports.getTriageStats = async (req, res) => {
 // Get unassigned patients with search
 exports.getUnassignedPatients = async (req, res) => {
   try {
-    const hospitalId = req.user.hospitalID
+    
 
-    console.log("Hospital ID:", hospitalId)
+    
     const { page = 1, limit = 10, search = '' } = req.query
 
     const query = {
-      hospitalID: hospitalId,
+      
       status: "Unassigned"
     }
 
@@ -90,11 +89,11 @@ exports.getUnassignedPatients = async (req, res) => {
 // Get doctors for assignment
 exports.getDoctorsForAssignment = async (req, res) => {
   try {
-    const hospitalId = req.user.hospitalID
+   
     const { search = '' } = req.query
 
     const query = {
-      hospitalID: hospitalId,
+     
       
     }
 
@@ -130,7 +129,7 @@ exports.processTriage = async (req, res) => {
   try {
     const { recordId, vitals, diagnosis, urgency, doctorId } = req.body;
   const triageStaffId = req.user._id
-    const hospitalId = req.user.hospitalID
+    
 
 
     // 1. Verify record exists and is unassigned
@@ -149,7 +148,7 @@ exports.processTriage = async (req, res) => {
     // 2. Verify doctor exists
     const doctor = await Doctor.findOne({
       _id: doctorId,
-      hospitalID: hospitalId
+      
     });
 
     if (!doctor) {
@@ -231,11 +230,11 @@ exports.processTriage = async (req, res) => {
 exports.getPatientDetails = async (req, res) => {
   try {
     const { id } = req.params
-    const hospitalId = req.user.hospitalID
+    
 
     const record = await MedicalRecord.findOne({
       _id: id,
-      hospitalID: hospitalId
+   
     })
     .populate('patientID', 'firstName lastName faydaID gender dateOfBirth contactNumber emergencyContact bloodGroup allergies')
 

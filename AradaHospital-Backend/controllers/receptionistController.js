@@ -3,6 +3,7 @@ const MedicalRecord = require('../models/MedicalRecord');
 // controllers/receptionistController.js
 const Receptionist = require('../models/Receptionist');
 
+
 const registerOrInitiatePatient = async (req, res) => {
   try {
     const {
@@ -14,51 +15,36 @@ const registerOrInitiatePatient = async (req, res) => {
       contactNumber,
       address,
       emergencyContact,
-      medicalHistory,
-      hospitalID
+      medicalHistory
     } = req.body;
 
-    if (!faydaID || !hospitalID) {
+    if (!faydaID) {
       return res.status(400).json({
         success: false,
-        message: "FaydaID and hospitalID are required"
+        message: "FaydaID is required"
       });
     }
 
-    const existingPatient = await Patient.findOne({ faydaID });
+    let existingPatient = await Patient.findOne({ faydaID });
 
     if (existingPatient) {
-      // Check if already registered at the hospital
-      const isRegistered = existingPatient.registeredHospital.some(
-        h => h.toString() === hospitalID
-      );
-
-      // Register hospital if not already
-      if (!isRegistered) {
-        existingPatient.registeredHospital.push(hospitalID);
-      }
-
-      // Create a new medical record
       const newRecord = await MedicalRecord.create({
         faydaID,
         patientID: existingPatient._id,
-        hospitalID,
         status: "Unassigned"
       });
 
+      existingPatient.updatedAt = new Date();
       await existingPatient.save();
 
       return res.status(200).json({
         success: true,
-        message: isRegistered
-          ? "Patient already registered - new record created"
-          : "Existing patient registered at new hospital",
+        message: "Patient already registered - new medical record created",
         patient: existingPatient,
         medicalRecord: newRecord
       });
     }
 
-    // If patient doesn't exist: create new one
     const newPatient = await Patient.create({
       faydaID,
       firstName,
@@ -69,14 +55,12 @@ const registerOrInitiatePatient = async (req, res) => {
       address,
       emergencyContact,
       medicalHistory: medicalHistory || "",
-      registeredHospital: [hospitalID],
       status: "Active"
     });
 
     const newRecord = await MedicalRecord.create({
       faydaID,
       patientID: newPatient._id,
-      hospitalID,
       status: "Unassigned"
     });
 
@@ -104,12 +88,14 @@ const registerOrInitiatePatient = async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error"
     });
   }
 };
+
+
 
 
 // Search patients across all hospitals
@@ -153,7 +139,6 @@ const getPatientByFaydaID = async (req, res) => {
     const { faydaID } = req.params;
 
     const patient = await Patient.findOne({ faydaID })
-      .populate('registeredHospital', 'name')
       .populate('assignedDoctor', 'firstName lastName');
 
     if (!patient) {
@@ -182,7 +167,7 @@ const getStaffAccount = async (req, res) => {
 
     // Find the doctor and populate the hospital information
     const doctor = await Doctor.findById(id)
-      .populate('hospitalID', 'name location contactNumber')
+      
       .populate('assignedPatientID', 'faydaID firstName lastName status');
 
     if (!doctor) {
@@ -201,7 +186,7 @@ const getStaffAccount = async (req, res) => {
       contactNumber: doctor.contactNumber,
       address: doctor.address,
       specialization: doctor.specialization,
-      hospital: doctor.hospitalID,
+     
       assignedPatients: doctor.assignedPatientID,
       createdAt: doctor.createdAt,
       updatedAt: doctor.updatedAt
@@ -222,7 +207,7 @@ const getReceptionistAccount = async (req, res) => {
 
     // Find the receptionist and populate the hospital information
     const receptionist = await Receptionist.findById(id)
-      .populate('hospitalID', 'name location contactNumber');
+      
 
     if (!receptionist) {
       return res.status(404).json({ message: "Receptionist not found" });
@@ -239,7 +224,7 @@ const getReceptionistAccount = async (req, res) => {
       role: receptionist.role,
       contactNumber: receptionist.contactNumber,
       address: receptionist.address,
-      hospital: receptionist.hospitalID,
+     
       createdAt: receptionist.createdAt,
       updatedAt: receptionist.updatedAt
     };

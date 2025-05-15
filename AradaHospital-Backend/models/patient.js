@@ -34,10 +34,7 @@ const patientSchema = new Schema({
   medicalHistory: { 
     type: String
   },
-  registeredHospital: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Hospital" 
-  }],
+
   assignedDoctor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Doctor"

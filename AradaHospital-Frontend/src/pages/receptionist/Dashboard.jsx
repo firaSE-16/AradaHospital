@@ -140,9 +140,9 @@ const ReceptionistDashboard = () => {
             <CardContent className="space-y-4">
               {receptionistData.hospital ? (
                 <>
-                  <InfoRow label="Hospital Name" value={receptionistData.hospital.name} />
-                  <InfoRow label="Location" value={receptionistData.hospital.location} />
-                  <InfoRow label="Contact" value={receptionistData.hospital.contactNumber} />
+                  <InfoRow label="Hospital Name" value={"Arada Hospital"} />
+                  <InfoRow label="Location" value={"Bole"} />
+                  <InfoRow label="Contact" value={"0909090909"} />
                 </>
               ) : (
                 <p className="text-muted-foreground">Not assigned to any hospital</p>

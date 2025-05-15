@@ -21,22 +21,15 @@ const RegisteredPatient = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
-  const [hospitalID, setHospitalID] = useState(null)
+  
   const [medicalHistory, setMedicalHistory] = useState("")
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // First get hospital ID from user info
-        const userRes = await axios.get(`${BASE_URL}/auth/me`, {
-          withCredentials: true
-        })
         
-        if (!userRes.data.hospitalId) {
-          throw new Error("Hospital ID not found in user data")
-        }
         
-        setHospitalID(userRes.data.hospitalId)
+        
 
         // Then fetch patient data
         const patientRes = await axios.get(`${BASE_URL}/reception/patient/${faydaID}`, {
@@ -67,7 +60,7 @@ const RegisteredPatient = () => {
   }, [faydaID, navigate])
 
   const handleSubmit = async () => {
-    if (!hospitalID || !patient) return
+    if ( !patient) return
 
     setSubmitting(true)
     try {
@@ -76,7 +69,7 @@ const RegisteredPatient = () => {
         {
           ...patient,
           faydaID,
-          hospitalID,
+         
           medicalHistory,
           dateOfBirth: moment(patient.dateOfBirth).format('YYYY-MM-DD')
         },
@@ -156,9 +149,9 @@ const RegisteredPatient = () => {
                 {patient.faydaID}
               </Badge>
             </div>
-            {hospitalID && (
+            { (
               <Badge variant="outline">
-                Hospital ID: {hospitalID}
+                Arada Hospital
               </Badge>
             )}
           </CardTitle>

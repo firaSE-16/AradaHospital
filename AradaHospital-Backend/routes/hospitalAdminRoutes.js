@@ -17,6 +17,6 @@ router.get("/hospitals/:id", authMiddleware, getHospitalDetails
 router.post("/add-staff", authMiddleware, addStaffAccount);
 router.delete("/staff/:staffId", authMiddleware, deleteStaffAccount);
 
-router.get("/patients/:hospitalID", authMiddleware, viewPatientsByHospital);
+router.get("/patients", authMiddleware, viewPatientsByHospital);
 
 module.exports = router;

@@ -8,18 +8,28 @@ import {
   ChevronDown,
   ChevronUp,
   LogOut,
-  Home,
+  Building,
   Users,
   ClipboardList,
   FlaskConical,
   Stethoscope,
   ClipboardCheck,
   UserPlus,
+  Menu,
+  X,
+  Shield,
+  FileText,
+  ClipboardEdit,
+  Activity,
+  Settings,
+  HelpCircle,
+  Plus
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { toast } from "react-toastify";
-import Cookies from "js-cookie";
+import { BASE_URL } from "@/lib/utils";
 
+// Updated icons for better visual hierarchy
 const roleBasedMenuItems = {
   Admin: [
     {
@@ -28,33 +38,50 @@ const roleBasedMenuItems = {
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
-      name: "Hospital Management",
+      name: "Hospitals",
       path: "/admin/hospital-management",
-      icon: <Home className="w-5 h-5" />,
+      icon: <Building className="w-5 h-5" />,
+      subLinks: [
+        { 
+          name: "All Hospitals", 
+          path: "/admin/hospital-management",
+          icon: <Building className="w-4 h-4" /> 
+        },
+        { 
+          name: "Add Hospital", 
+          path: "/admin/hospital-management/add-hospital",
+          icon: <Plus className="w-4 h-4" /> 
+        },
+      ],
+    },
+    {
+      name: "Administrators",
+      path: "/admin/admin-management",
+      icon: <Shield className="w-5 h-5" />,
     },
   ],
   Doctor: [
     {
-      name: "Dashboard",
+      name: "My Dashboard",
       path: "/doctor/dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      icon: <Activity className="w-5 h-5" />,
     },
     {
-      name: "Patient Records",
+      name: "Medical Records",
       path: "/doctor/assigned-records",
-      icon: <ClipboardList className="w-5 h-5" />,
+      icon: <FileText className="w-5 h-5" />,
+    },
+    {
+      name: "Patient Care",
+      path: "/doctor/records",
+      icon: <Stethoscope className="w-5 h-5" />,
     },
   ],
   HospitalAdministrator: [
     {
-      name: "Dashboard",
+      name: "Hospital Overview",
       path: "/hospital-admin/dashboard",
       icon: <LayoutDashboard className="w-5 h-5" />,
-    },
-    {
-    name: "All Staff",
-      path: "/hospital-admin/staff-management",
-      icon: <Users className="w-5 h-5" />,
     },
     {
       name: "Staff Management",
@@ -62,40 +89,33 @@ const roleBasedMenuItems = {
       icon: <Users className="w-5 h-5" />,
       subLinks: [
         { 
-          name: "Add Staff", 
-          path: "/hospital-admin/add-staff",
-          icon: <UserPlus className="w-4 h-4" /> 
+          name: "All Staff", 
+          path: "/hospital-admin/staff-management",
+          icon: <Users className="w-4 h-4" /> 
         },
         { 
-          name: "View Staff", 
-          path: "/hospital-admin/edit-staff",
-          icon: <UserRound className="w-4 h-4" /> 
+          name: "Add New Staff", 
+          path: "/hospital-admin/add-staff",
+          icon: <UserPlus className="w-4 h-4" /> 
         },
       ],
     },
     {
       name: "Patient Records",
       path: "/hospital-admin/patient-records",
-      icon: <ClipboardCheck className="w-5 h-5" />,
-      subLinks: [
-        { 
-          name: "View Records", 
-          path: "/hospital-admin/view-records",
-          icon: <BookOpenText className="w-4 h-4" /> 
-        },
-      ],
+      icon: <ClipboardEdit className="w-5 h-5" />,
     },
     {
-      name: "Audit Logs",
+      name: "Audit & Reports",
       path: "/hospital-admin/audit-logs",
       icon: <BarChart4 className="w-5 h-5" />,
     },
   ],
   Receptionist: [
     {
-      name: "Dashboard",
+      name: "Reception Desk",
       path: "/receptionist/dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      icon: <ClipboardCheck className="w-5 h-5" />,
     },
     {
       name: "Patient Registration",
@@ -105,32 +125,33 @@ const roleBasedMenuItems = {
   ],
   Triage: [
     {
-      name: "Dashboard",
+      name: "Triage Center",
       path: "/triage/dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      icon: <Activity className="w-5 h-5" />,
     },
     {
-      name: "Unassigned Patients",
+      name: "Patient Queue",
       path: "/triage/unassigned",
-      icon: <Stethoscope className="w-5 h-5" />,
+      icon: <ClipboardList className="w-5 h-5" />,
     },
   ],
   LabTechnician: [
     {
-      name: "Dashboard",
+      name: "Laboratory",
       path: "/laboratorist/dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      icon: <FlaskConical className="w-5 h-5" />,
     },
     {
-      name: "Lab Requests",
+      name: "Test Requests",
       path: "/laboratorist/patientList",
-      icon: <FlaskConical className="w-5 h-5" />,
+      icon: <ClipboardCheck className="w-5 h-5" />,
     },
   ],
 };
 
 const Sidebar = () => {
   const [openMenus, setOpenMenus] = useState({});
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const { userRole, setUserRole } = useUser();
 
@@ -143,116 +164,154 @@ const Sidebar = () => {
       }));
     } else {
       navigate(item.path);
+      if (window.innerWidth < 1024) setIsCollapsed(false);
     }
   };
 
-  const handleLogout = () => {
-    // Remove JWT cookie
-    Cookies.remove("jwt");
-    
-    // Clear user role from context
-    setUserRole(null);
-    
-    // Show success message
-    toast.success("Logged out successfully");
-    
-    // Navigate to login page
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      setUserRole(null);
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
   };
 
   const menuItems = roleBasedMenuItems[userRole] || [];
 
   return (
-    <div className="w-64 h-screen border-r p-5 flex flex-col bg-primary shadow-lg">
-      {/* Logo Section */}
-      <div className="h-20 mb-8 flex justify-center items-center border-b border-white/20">
-        <div className="flex items-center gap-2">
-          <div className="bg-white/10 p-2 rounded-lg">
-            <Stethoscope className="text-white w-6 h-6" />
+    <>
+      {/* Mobile Toggle Button */}
+      <button 
+        className={`fixed lg:hidden z-50 top-4 left-4 p-2 rounded-lg bg-[#2E86AB] text-white shadow-md`}
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        {isCollapsed ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Sidebar Container */}
+      <div 
+        className={`
+          fixed h-screen flex flex-col bg-gradient-to-b from-[#1A4E6B] to-[#0D2C3E]
+          shadow-xl transition-all duration-300 ease-in-out z-40
+          ${isCollapsed ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0 lg:w-72'}
+        `}
+      >
+        {/* Logo Header */}
+        <div className="h-24 px-6 flex items-center justify-between border-b border-[#2A5D7A]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <Stethoscope className="text-white w-6 h-6" />
+            </div>
+            <h1 className="text-xl font-bold text-white tracking-wide">MediCare Pro</h1>
           </div>
-          <p className="text-xl text-white font-bold tracking-wide">MediConnect</p>
+          <button 
+            className="hidden lg:block text-white/60 hover:text-white p-1"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            <X size={20} />
+          </button>
         </div>
-      </div>
 
-      {/* Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto">
-        <ul className="flex flex-col gap-1">
-          {menuItems.map((item) => (
-            <li key={item.name} className="relative">
-              <NavLink
-                to={item.path}
-                onClick={(e) => handleMenuClick(item, e)}
-                className={({ isActive }) =>
-                  `py-3 px-4 flex gap-3 items-center w-full rounded-lg transition-all duration-200 ${
-                    isActive 
-                      ? "bg-white/20 text-white font-medium shadow-md" 
-                      : "text-white/90 hover:bg-white/10 hover:text-white"
-                  }`
-                }
-              >
-                <span className="[&>svg]:w-5 [&>svg]:h-5">
-                  {item.icon}
-                </span>
-                <span className="flex-1">{item.name}</span>
-                {item.subLinks && (
-                  <span className="ml-2">
-                    {openMenus[item.name] ? 
-                      <ChevronUp className="w-4 h-4" /> : 
-                      <ChevronDown className="w-4 h-4" />
-                    }
-                  </span>
-                )}
-              </NavLink>
+        {/* User Profile */}
+        <div className="px-6 py-4 flex items-center gap-3 border-b border-[#2A5D7A]">
+          <div className="w-10 h-10 rounded-full bg-[#5AC5C8] flex items-center justify-center text-white font-bold">
+            {userRole?.charAt(0)}
+          </div>
+          <div>
+            <p className="text-white font-medium">Administrator</p>
+            <p className="text-xs text-white/60 capitalize">{userRole}</p>
+          </div>
+        </div>
 
-              {item.subLinks && (
-                <ul
-                  className={`ml-8 pl-4 border-l-2 border-white/10 overflow-hidden transition-all duration-300 ${
-                    openMenus[item.name] 
-                      ? "max-h-96 py-2 opacity-100" 
-                      : "max-h-0 py-0 opacity-0"
-                  }`}
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto px-4 py-6">
+          <ul className="space-y-1">
+            {menuItems.map((item) => (
+              <li key={item.name}>
+                <NavLink
+                  to={item.path}
+                  onClick={(e) => handleMenuClick(item, e)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                    ${isActive 
+                      ? "bg-[#5AC5C8] text-white shadow-md" 
+                      : "text-white/80 hover:bg-white/10 hover:text-white"}`
+                  }
                 >
-                  {item.subLinks.map((sub) => (
-                    <li key={sub.name}>
-                      <NavLink
-                        to={sub.path}
-                        className={({ isActive }) =>
-                          `py-2 px-3 flex gap-3 items-center text-sm rounded-lg transition-all ${
-                            isActive
-                              ? "bg-white/20 text-white font-medium"
-                              : "text-white/80 hover:bg-white/10 hover:text-white"
-                          }`
-                        }
-                      >
-                        <span className="[&>svg]:w-4 [&>svg]:h-4">
-                          {sub.icon}
-                        </span>
-                        {sub.name}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </nav>
+                  <span className="[&>svg]:w-5 [&>svg]:h-5">
+                    {item.icon}
+                  </span>
+                  <span className="flex-1 font-medium">{item.name}</span>
+                  {item.subLinks && (
+                    <span>
+                      {openMenus[item.name] ? 
+                        <ChevronUp className="w-4 h-4" /> : 
+                        <ChevronDown className="w-4 h-4" />}
+                    </span>
+                  )}
+                </NavLink>
 
-      {/* Footer Section */}
-      <div className="mt-auto pt-4 border-t border-white/10">
-        <div className="text-sm text-white/80 mb-3 px-2">
-          Logged in as:{" "}
-          <span className="font-medium capitalize text-white">{userRole}</span>
+                {item.subLinks && openMenus[item.name] && (
+                  <ul className="ml-12 mt-1 space-y-1">
+                    {item.subLinks.map((sub) => (
+                      <li key={sub.name}>
+                        <NavLink
+                          to={sub.path}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-2 text-sm rounded transition-all
+                            ${isActive
+                              ? "text-[#5AC5C8] font-medium"
+                              : "text-white/70 hover:text-white"}`
+                          }
+                        >
+                          <span className="[&>svg]:w-4 [&>svg]:h-4">
+                            {sub.icon}
+                          </span>
+                          {sub.name}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Footer Section */}
+        <div className="px-6 py-4 border-t border-[#2A5D7A]">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-white/80 hover:text-white rounded-lg transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Sign Out</span>
+          </button>
+          <div className="mt-4 flex justify-center gap-4">
+            <button className="text-white/50 hover:text-white">
+              <Settings size={18} />
+            </button>
+            <button className="text-white/50 hover:text-white">
+              <HelpCircle size={18} />
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="w-full py-2.5 px-4 flex items-center gap-3 text-white/90 hover:text-white rounded-lg hover:bg-white/10 transition-all"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
       </div>
-    </div>
+
+      {/* Overlay for mobile */}
+      {isCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/50 lg:hidden z-30"
+          onClick={() => setIsCollapsed(false)}
+        />
+      )}
+    </>
   );
 };
 

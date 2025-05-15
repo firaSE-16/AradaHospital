@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const medicalRecordSchema = new Schema({
   faydaID: { type: String, required: true, index: true },
   patientID: { type: Schema.Types.ObjectId, ref: 'Patient', required: true },
-  hospitalID: { type: Schema.Types.ObjectId, ref: 'Hospital', required: true },
+ 
   currentDoctor: { type: Schema.Types.ObjectId, ref: 'Doctor' },
   status: {
     type: String,

@@ -7,7 +7,6 @@ const Triage = require("../models/Triage");
 const Patient = require("../models/Patient");
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt");
-const Hospital = require("../models/Hospital");
 const HospitalAdministrator = require("../models/HospitalAdministrator");
 const addStaffAccount = async (req, res) => {
   try {
@@ -21,7 +20,7 @@ const addStaffAccount = async (req, res) => {
       email,
       contactNumber,
       address,
-      hospitalID,
+      
     } = req.body;
 
     const { role: staffRole } = req.user;
@@ -67,7 +66,6 @@ const addStaffAccount = async (req, res) => {
       password: hashedPassword, 
       contactNumber,
       address,
-      hospitalID,
       role,
       email,
     });
@@ -97,21 +95,18 @@ const getStaff = async (req, res) => {
 
     // Find the user with populated hospital data
     const user = await User.findById(id)
-      .populate({
-        path: 'hospitalID',
-        select: 'name location contactNumber licenseNumber licenseImage',
-      });
+      
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // For Hospital Administrators, get additional hospital info
-    let hospitalDetails = null;
+  
     if (user.role === 'HospitalAdministrator') {
       const admin = await HospitalAdministrator.findById(id)
-        .populate('hospitalID');
-      hospitalDetails = admin?.hospitalID || null;
+        
+      
     }
 
     // Structure the response data
@@ -129,7 +124,7 @@ const getStaff = async (req, res) => {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       },
-      hospital: hospitalDetails || user.hospitalID
+     
     };
 
     res.status(200).json(responseData);
@@ -144,26 +139,10 @@ const getHospitalDetails = async (req, res) => {
     const { role } = req.user;
     if (role !== "HospitalAdministrator") {
       return res.status(403).json({ msg: "Unauthorized access" });
-    }
-
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ msg: "Invalid hospital ID" });
-    }
-
-    const hospital = await Hospital.findById(id);
-    if (!hospital) {
-      return res.status(404).json({ msg: "Hospital not found" });
-    }
-
+    }   
     // Get all staff for this hospital (excluding system Admins)
     const staff = await User.aggregate([
       {
-        $match: {
-          hospitalID: new mongoose.Types.ObjectId(id),
-          role: { $nin: ["Admin"] } // Exclude system admins
-        }
       },
       {
         $project: {
@@ -199,7 +178,7 @@ const getHospitalDetails = async (req, res) => {
     }, {});
 
     res.status(200).json({
-      hospital,
+      
       staff,
       staffByRole,
       roleCounts,
@@ -275,8 +254,8 @@ const viewPatientsByHospital = async (req, res) => {
         .json({ message: "Only hospital admins can add staff member" });
     }
 
-    const { hospitalID } = req.params;
-    const patients = await Patient.find({ hospitalID });
+    
+    const patients = await Patient.find();
 
     if (!patients.length) {
       return res
