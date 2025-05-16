@@ -27,7 +27,7 @@ import {
   AvatarImage,
 } from "../../components/ui/avatar";
 
-const BASE_URL = "http://localhost:5500";
+const BASE_URL = "http://localhost:7500";
 
 const AssignedRecords = () => {
   const [doctorInfo, setDoctorInfo] = useState(null);

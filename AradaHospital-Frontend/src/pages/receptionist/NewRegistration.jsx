@@ -33,7 +33,7 @@ const NewRegistration = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userRes = await fetch('http://localhost:5500/api/auth/me', {
+        const userRes = await fetch('http://localhost:7500/api/auth/me', {
           credentials: 'include',
         });
         
@@ -68,7 +68,7 @@ const NewRegistration = () => {
       };
 
       const response = await axios.post(
-        'http://localhost:5500/api/reception/register-patient',
+        'http://localhost:7500/api/reception/register-patient',
         formattedData,
         {
           withCredentials: true,

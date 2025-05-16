@@ -71,11 +71,7 @@ const roleBasedMenuItems = {
       path: "/doctor/assigned-records",
       icon: <FileText className="w-5 h-5" />,
     },
-    {
-      name: "Patient Care",
-      path: "/doctor/records",
-      icon: <Stethoscope className="w-5 h-5" />,
-    },
+    
   ],
   HospitalAdministrator: [
     {

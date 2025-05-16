@@ -37,12 +37,13 @@ import {
   Clock,
   CheckCircle2,
   Home,
+  UserCheck,
 } from "lucide-react";import { format, isValid } from "date-fns";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "react-toastify"
 import { Skeleton } from "@/components/ui/skeleton";
 
-const BASE_URL = "http://localhost:5500/api/doctors";
+const BASE_URL = "http://localhost:7500/api/doctors";
 
 // Helper function to safely format dates
 const safeFormat = (date, formatStr) => {
@@ -55,6 +56,7 @@ const PatientDetail = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
   
+  const [faydaID,setFaydaID] = useState(null);
   const [patient, setPatient] = useState(null);
   const [medicalHistory, setMedicalHistory] = useState([]);
   const [currentRecord, setCurrentRecord] = useState(null);
@@ -86,107 +88,110 @@ const PatientDetail = () => {
     urgency: "Normal"
   });
 
-  useEffect(() => {
-    const fetchPatientData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch patient profile
-        const patientRes = await fetch(`${BASE_URL}/patients/${patientId}/profile`, { 
-          credentials: "include",
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-      
-       
-        
-        if (!patientRes.ok) throw new Error("Failed to fetch patient profile");
-        const patientData = await patientRes.json();
-
-        console.log("Patient Data:", patientData);
-        
-        setPatient(patientData.data.patient);
-        setCurrentRecord(patientData.data.currentVisit);
-
-        // Fetch patient's medical history
-        const historyRes = await fetch(`${BASE_URL}/patients/${patientId}/records`, { 
-          credentials: "include",
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (!historyRes.ok) throw new Error("Failed to fetch medical history");
-        const historyData = await historyRes.json();
-        setMedicalHistory(historyData.data.medicalHistory || []);
-
-        // If there's a current record, fetch its prescriptions and lab requests
-        if (patientData.data.currentVisit) {
-          const prescriptionsRes = await fetch(
-            `${BASE_URL}/records/${patientData.data.currentVisit.recordId}/prescriptions`, 
-            { 
-              credentials: "include",
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            }
-          );
-          if (!prescriptionsRes.ok) throw new Error("Failed to fetch prescriptions");
-          const prescriptionsData = await prescriptionsRes.json();
-          setPrescriptions(prescriptionsData.data || []);
-
-          console.log("Prescriptions Data:", patientData);
-          const labsRes = await fetch(
-            `${BASE_URL}/records/${patientData.data.currentVisit.recordId}/lab-requests`, 
-            { 
-              credentials: "include",
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            }
-          );
-          if (!labsRes.ok) throw new Error("Failed to fetch lab requests");
-          const labsData = await labsRes.json();
-          setLabRequests(labsData.data || []);
-        }
-
-        // Initialize form with existing record data if in treatment
-        if (patientData.data.currentVisit?.status === "InTreatment") {
-          setRecordForm({
-            diagnosis: patientData.data.currentVisit.doctorNotes?.diagnosis || "",
-            treatmentPlan: patientData.data.currentVisit.doctorNotes?.treatmentPlan || "",
-            vitals: patientData.data.currentVisit.triageData?.vitals || {
-              bloodPressure: "",
-              heartRate: "",
-              oxygenSaturation: ""
-            }
-          });
-        }
-
-      } catch (error) {
-        console.error("Fetch error:", error);
-        toast.error(error.message);
-      } finally {
-        setIsLoading(false);
+const fetchCentralMedicalHistory = async (id) => {
+  if (!id) return;
+  try {
+    const historyRes = await fetch(`http://localhost:5500/api/central-history/records/${id}`, {
+      credentials: "include",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
-    };
+    });
 
-    fetchPatientData();
-  }, [patientId]);
+    if (!historyRes.ok) throw new Error("Failed to fetch medical history");
+    const historyData = await historyRes.json();
+    setMedicalHistory(historyData.patient.records || []);
+  } catch (error) {
+    console.error("Error fetching medical history:", error);
+  }
+};
+
+const fetchPatientData = async () => {
+  try {
+    setIsLoading(true);
+    const patientRes = await fetch(`${BASE_URL}/patients/${patientId}/profile`, {
+      credentials: "include",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!patientRes.ok) throw new Error("Failed to fetch patient profile");
+    const patientData = await patientRes.json();
+
+    setPatient(patientData.data.patient);
+    setCurrentRecord(patientData.data.currentVisit);
+
+    const fetchedFaydaID = patientData.data.patient.basicInfo.faydaID;
+    setFaydaID(fetchedFaydaID);
+    console.log("Fayda ID fetched:", fetchedFaydaID);
+
+    // Fetch central medical history after getting faydaID
+    await fetchCentralMedicalHistory(fetchedFaydaID);
+
+    // Rest of your existing fetch logic...
+    if (patientData.data.currentVisit) {
+      const recordId = patientData.data.currentVisit.recordId;
+
+      const prescriptionsRes = await fetch(`${BASE_URL}/records/${recordId}/prescriptions`, {
+        credentials: "include",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!prescriptionsRes.ok) throw new Error("Failed to fetch prescriptions");
+      const prescriptionsData = await prescriptionsRes.json();
+      setPrescriptions(prescriptionsData.data || []);
+
+      const labsRes = await fetch(`${BASE_URL}/records/${recordId}/lab-requests`, {
+        credentials: "include",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!labsRes.ok) throw new Error("Failed to fetch lab requests");
+      const labsData = await labsRes.json();
+      setLabRequests(labsData.data || []);
+    }
+
+    if (patientData.data.currentVisit?.status === "InTreatment") {
+      setRecordForm({
+        diagnosis: patientData.data.currentVisit.doctorNotes?.diagnosis || "",
+        treatmentPlan: patientData.data.currentVisit.doctorNotes?.treatmentPlan || "",
+        vitals: patientData.data.currentVisit.triageData?.vitals || {
+          bloodPressure: "",
+          heartRate: "",
+          oxygenSaturation: ""
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    toast.error(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchPatientData();
+}, [patientId]);
+
+
 
   const handleBack = () => navigate(-1);
 
   const startTreatment = async () => {
     try {
       if (!currentRecord) return;
-      
+      console.log("Starting treatment for record ID:",currentRecord, currentRecord.recordId, currentRecord._id);
+    
       setIsSubmitting(true);
       const response = await fetch(
-        `${BASE_URL}/records/${currentRecord.recordId}/start-treatment`, 
+        `${BASE_URL}/records/${currentRecord.recordId || currentRecord._id}/start-treatment`, 
         {
           method: "PATCH",
-          credentials: "include",
-          headers: {
+          credentials: "include",          headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         }
@@ -200,6 +205,8 @@ const PatientDetail = () => {
       const data = await response.json();
       setCurrentRecord(data.data);
       toast.success("Treatment started successfully");
+        fetchPatientData();
+
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -208,8 +215,10 @@ const PatientDetail = () => {
   };
 
   const handleRecordSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault();  
+      
     if (!currentRecord) return;
+    
     
     setIsSubmitting(true);
     
@@ -239,6 +248,7 @@ const PatientDetail = () => {
       const data = await response.json();
       setCurrentRecord(data.data);
       toast.success("Medical record updated successfully");
+      fetchPatientData();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -273,10 +283,10 @@ const PatientDetail = () => {
     if (!currentRecord) return;
     
     setIsSubmitting(true);
-    
+    console.log("Submitting prescription for record ID:", currentRecord);
     try {
       const response = await fetch(
-        `${BASE_URL}/records/${currentRecord.recordId}/prescriptions`, 
+        `${BASE_URL}/records/${currentRecord.recordId || currentRecord._id}/prescriptions`, 
         {
           method: "POST",
           credentials: "include",
@@ -306,6 +316,7 @@ const PatientDetail = () => {
       });
       
       toast.success("Prescription created successfully");
+      fetchPatientData();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -320,7 +331,7 @@ const PatientDetail = () => {
     setIsSubmitting(true);
     
     try {
-      console.log(currentRecord.recordId)
+      
       const response = await fetch(
         
         `${BASE_URL}/records/${currentRecord.recordId}/lab-requests`, 
@@ -359,6 +370,7 @@ const PatientDetail = () => {
       setIsSubmitting(false);
     }
   };
+  
 
   if (isLoading) {
     return (
@@ -516,13 +528,13 @@ const PatientDetail = () => {
           <User className="h-4 w-4 mr-2" />
           <span className="font-medium">Patient Profile</span>
         </TabsTrigger>
-        <TabsTrigger
-          value="records"
-          className="data-[state=active]:shadow-sm data-[state=active]:bg-white py-1"
-        >
-          <ClipboardCheck className="h-4 w-4 mr-2" />
-          <span className="font-medium">Current Record</span>
-        </TabsTrigger>
+      <TabsTrigger
+  value="records"
+  className="data-[state=active]:shadow-sm data-[state=active]:bg-white py-1"
+>
+  <ClipboardCheck className="h-4 w-4 mr-2" />
+  <span className="font-medium">Current Record</span>
+</TabsTrigger>
         <TabsTrigger
           value="history"
           className="data-[state=active]:shadow-sm data-[state=active]:bg-white py-1"
@@ -650,6 +662,15 @@ const PatientDetail = () => {
           </CardContent>
         </Card>
 
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3 border-b">
+            <CardTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5 text-blue-600" />
+              <span>Hospital Information</span>
+            </CardTitle>
+          </CardHeader>
+          
+        </Card>
       </TabsContent>
 
       {/* Current Record Tab */}
@@ -657,6 +678,7 @@ const PatientDetail = () => {
         {currentRecord ? (
           <>
             {/* Current Record Status Card */}
+            
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
@@ -1437,73 +1459,129 @@ const PatientDetail = () => {
         )}
       </TabsContent>
 
+      
+      
+      
+      
+      
       {/* Medical History Tab */}
       <TabsContent value="history" className="pt-6 space-y-6">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3 border-b">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <span>Medical History</span>
-            </CardTitle>
-            <CardDescription>
-              Previous medical records and visits
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {medicalHistory.length > 0 ? (
-              <div className="space-y-4">
-                {medicalHistory.map((record) => (
-                  <Card
-                    key={record._id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardHeader className="flex flex-row justify-between items-start space-y-0 pb-2">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {safeFormat(record.createdAt, "PPP")}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {record.diagnosis || "No diagnosis recorded"}
-                        </p>
+  <Card className="border-0 shadow-sm">
+    <CardHeader className="pb-3 border-b">
+      <CardTitle className="flex items-center gap-2 text-lg font-semibold text-blue-700">
+        <FileText className="h-5 w-5 text-blue-600" />
+        Central Medical History
+      </CardTitle>
+      <CardDescription className="text-sm text-gray-500">
+        Comprehensive medical records from all connected hospitals
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent className="pt-6">
+      {medicalHistory.length > 0 ? (
+        <div className="space-y-6">
+          {medicalHistory.map((record, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow border border-gray-100">
+              <CardHeader className="flex flex-row justify-between items-start pb-3 border-b">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    {record.hospitalID ? `Hospital ID: ${record.hospitalID}` : "Central Record"}
+                  </p>
+                  {record.date && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {safeFormat(new Date(record.date), "PPP")}
+                    </p>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {/* Doctor Notes */}
+                {record?.doctorNotes && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <h3 className="font-medium text-blue-800 flex items-center gap-2 mb-2">
+                      <UserCheck className="h-4 w-4" />
+                      Doctor's Notes
+                    </h3>
+                    {record.doctorNotes.diagnosis && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Diagnosis</p>
+                        <p className="text-sm text-gray-800">{record.doctorNotes.diagnosis}</p>
                       </div>
-                      <Badge
-                        variant={
-                          record.status === "Completed"
-                            ? "default"
-                            : record.status === "InTreatment"
-                            ? "secondary"
-                            : "outline"
-                        }
-                      >
-                        {record.status}
-                      </Badge>
-                    </CardHeader>
-                    <CardContent>
-                      {record.treatmentPlan && (
-                        <div className="mt-2">
-                          <p className="text-xs font-medium text-gray-500 mb-1">
-                            Treatment Plan
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {record.treatmentPlan}
-                          </p>
+                    )}
+                    {record.doctorNotes.treatmentPlan && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-1">Treatment Plan</p>
+                        <p className="text-sm text-gray-800">{record.doctorNotes.treatmentPlan}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Lab Results */}
+                {Array.isArray(record.labResults) && record.labResults.length > 0 && (
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <h3 className="font-medium text-green-800 flex items-center gap-2 mb-2">
+                      <FlaskConical className="h-4 w-4" />
+                      Lab Results
+                    </h3>
+                    <div className="space-y-3">
+                      {record.labResults.map((lab, idx) => (
+                        <div key={idx} className="border-b border-green-100 pb-3 last:border-0 last:pb-0">
+                          <div className="flex justify-between">
+                            <p className="text-sm font-medium text-gray-800">{lab.testName || "Unnamed Test"}</p>
+                            {lab.date && (
+                              <p className="text-xs text-gray-500">
+                                {safeFormat(new Date(lab.date), "PP")}
+                              </p>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{lab.result || "No result provided"}</p>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 gap-4">
-                <FileText className="h-12 w-12 text-gray-400" />
-                <p className="text-lg font-medium text-gray-500">
-                  No medical history found
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Prescriptions */}
+                {Array.isArray(record.prescription) && record.prescription.length > 0 && (
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <h3 className="font-medium text-purple-800 flex items-center gap-2 mb-2">
+                      <Pill className="h-4 w-4" />
+                      Prescriptions
+                    </h3>
+                    <div className="space-y-3">
+                      {record.prescription.map((med, idx) => (
+                        <div key={idx} className="border-b border-purple-100 pb-3 last:border-0 last:pb-0">
+                          <div className="flex justify-between">
+                            <p className="text-sm font-medium text-gray-800">{med.medicationName || "Unnamed"}</p>
+                            <p className="text-xs text-gray-500">{med.dosage || "N/A"}</p>
+                          </div>
+                          <div className="flex gap-4 mt-1">
+                            <p className="text-xs text-gray-600">Frequency: {med.frequency || "-"}</p>
+                            <p className="text-xs text-gray-600">Duration: {med.duration || "-"}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+          <FileText className="h-12 w-12 text-gray-400" />
+          <p className="text-lg font-medium text-gray-500">
+            No medical history found in central records
+          </p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>
+
     </Tabs>
       
     </div>
