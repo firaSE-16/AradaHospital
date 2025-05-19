@@ -188,7 +188,7 @@ const AssignedRecords = () => {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="p-6 space-y-8   bg-emerald-50">
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
@@ -232,91 +232,15 @@ const AssignedRecords = () => {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8  bg-emerald-50">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Patients</h1>
-          <p className="text-gray-500 mt-1">
-            {doctorInfo && `Dr. ${doctorInfo.firstName} ${doctorInfo.lastName} • ${doctorInfo.specialization}`}
-          </p>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button variant="outline" size="sm" className="gap-1">
-            <PlusCircle className="h-4 w-4" />
-            New Patient
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={refreshData}
-            disabled={refreshing}
-          >
-            {refreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Patients</p>
-              <p className="text-2xl font-bold mt-1">{assignedRecords.length}</p>
-            </div>
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <User className="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Active Cases</p>
-              <p className="text-2xl font-bold mt-1">
-                {assignedRecords.filter(p => p.recordStatus === "InTreatment" || p.recordStatus === "In-Treatment").length}
-              </p>
-            </div>
-            <div className="bg-green-100 p-2 rounded-lg">
-              <Activity className="h-5 w-5 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Emergency</p>
-              <p className="text-2xl font-bold mt-1">
-                {assignedRecords.filter(p => p.recordStatus === "Emergency").length}
-              </p>
-            </div>
-            <div className="bg-red-100 p-2 rounded-lg">
-              <HeartPulse className="h-5 w-5 text-red-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Discharged</p>
-              <p className="text-2xl font-bold mt-1">
-                {assignedRecords.filter(p => p.recordStatus === "Discharged").length}
-              </p>
-            </div>
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <Stethoscope className="h-5 w-5 text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
+  
 
       {/* Search and Filter */}
       <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
@@ -331,10 +255,7 @@ const AssignedRecords = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-1">
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
+       
         </div>
       </div>
 

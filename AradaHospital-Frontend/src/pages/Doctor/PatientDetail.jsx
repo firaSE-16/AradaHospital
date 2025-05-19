@@ -374,7 +374,7 @@ useEffect(() => {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6  bg-emerald-50">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-8 w-[200px]" />
@@ -409,7 +409,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6  bg-emerald-50">
       {/* Header with back button */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={handleBack}>

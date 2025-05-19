@@ -1,22 +1,16 @@
 import Navbar from '../Navbar/Navbar'
 import Footer from '../Footer/Footer'
-import Sidemenu from '../Navbar/Sidemenu';
+import BottomNav from '@/components/layoutComponents/BottomNav';
+
 const Layout = ({children}) => {
   return (
-    <>
-      <div className="lg:hidden">
-        <Sidemenu />
-      </div>
-
-      <div className="hidden lg:block">
-        <Navbar />
-      </div>
-     
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <Navbar />
+      <main className="max-w-screen-xl mx-auto px-4 py-6">
         {children}
-       
-
-      <Footer />
-    </>
+      </main>
+      <BottomNav />
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Button } from "../../components/ui/button"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Users } from "lucide-react"
 
 const EditViewStaff = () => {
   // Sample staff data
@@ -41,45 +41,66 @@ const EditViewStaff = () => {
   ]
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Edit View Staff</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Staff List</CardTitle>
+    <div className="space-y-6 p-6 bg-emerald-50 min-h-screen">
+      <div className="flex items-center gap-3">
+        <Users className="h-8 w-8 text-emerald-600" />
+        <h1 className="text-2xl font-bold text-emerald-900">Staff Management</h1>
+      </div>
+      
+      <Card className="border-emerald-200 shadow-sm">
+        <CardHeader className="bg-emerald-100/50 border-b border-emerald-200">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-emerald-800">Staff Directory</CardTitle>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              Add New Staff
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-emerald-50">
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-emerald-800">Name</TableHead>
+                <TableHead className="text-emerald-800">Email</TableHead>
+                <TableHead className="text-emerald-800">Role</TableHead>
+                <TableHead className="text-emerald-800">Department</TableHead>
+                <TableHead className="text-emerald-800">Status</TableHead>
+                <TableHead className="text-emerald-800 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {staffData.map((staff) => (
-                <TableRow key={staff.id}>
-                  <TableCell>{staff.name}</TableCell>
-                  <TableCell>{staff.email}</TableCell>
+                <TableRow key={staff.id} className="hover:bg-emerald-50/50">
+                  <TableCell className="font-medium">{staff.name}</TableCell>
+                  <TableCell className="text-emerald-600">{staff.email}</TableCell>
                   <TableCell>{staff.role}</TableCell>
                   <TableCell>{staff.department}</TableCell>
                   <TableCell>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${staff.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        staff.status === "Active" 
+                          ? "bg-emerald-100 text-emerald-800" 
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {staff.status}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
                       </Button>
@@ -96,4 +117,3 @@ const EditViewStaff = () => {
 }
 
 export default EditViewStaff
-

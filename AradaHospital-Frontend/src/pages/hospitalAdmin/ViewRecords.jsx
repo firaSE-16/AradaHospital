@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Button } from "../../components/ui/button"
-import { Eye, FileText } from "lucide-react"
+import { Eye, FileText, Users } from "lucide-react"
 
 const ViewRecords = () => {
   // Sample patient data
@@ -41,41 +41,61 @@ const ViewRecords = () => {
   ]
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">View Records</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Patient Records</CardTitle>
+    <div className="space-y-6 p-6 bg-emerald-50 min-h-screen">
+      <div className="flex items-center gap-3">
+        <Users className="h-8 w-8 text-emerald-600" />
+        <h1 className="text-2xl font-bold text-emerald-900">Patient Records</h1>
+      </div>
+
+      <Card className="border-emerald-200 shadow-sm">
+        <CardHeader className="bg-emerald-100/50 border-b border-emerald-200">
+          <CardTitle className="text-emerald-800">Patient Information</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-emerald-50">
               <TableRow>
-                <TableHead>Patient ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Last Visit</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-emerald-800">Patient ID</TableHead>
+                <TableHead className="text-emerald-800">Name</TableHead>
+                <TableHead className="text-emerald-800">Age</TableHead>
+                <TableHead className="text-emerald-800">Gender</TableHead>
+                <TableHead className="text-emerald-800">Last Visit</TableHead>
+                <TableHead className="text-emerald-800">Doctor</TableHead>
+                <TableHead className="text-emerald-800 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {patientData.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>{patient.id}</TableCell>
+                <TableRow key={patient.id} className="hover:bg-emerald-50/50">
+                  <TableCell className="font-medium">{patient.id}</TableCell>
                   <TableCell>{patient.name}</TableCell>
                   <TableCell>{patient.age}</TableCell>
-                  <TableCell>{patient.gender}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      patient.gender === "Male" 
+                        ? "bg-blue-100 text-blue-800" 
+                        : "bg-pink-100 text-pink-800"
+                    }`}>
+                      {patient.gender}
+                    </span>
+                  </TableCell>
                   <TableCell>{patient.lastVisit}</TableCell>
                   <TableCell>{patient.doctor}</TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      >
                         <FileText className="h-4 w-4 mr-1" />
                         History
                       </Button>
@@ -92,4 +112,3 @@ const ViewRecords = () => {
 }
 
 export default ViewRecords
-

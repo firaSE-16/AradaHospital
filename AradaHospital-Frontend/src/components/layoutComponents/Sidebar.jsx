@@ -1,71 +1,30 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
+import { BASE_URL } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  UserRound,
-  BookOpenText,
   BarChart4,
   ChevronDown,
   ChevronUp,
-  LogOut,
-  Building,
-  Users,
-  ClipboardList,
-  FlaskConical,
-  Stethoscope,
   ClipboardCheck,
-  UserPlus,
-  Menu,
-  X,
-  Shield,
-  FileText,
   ClipboardEdit,
-  Activity,
-  Settings,
+  ClipboardList,
+  FileText,
   HelpCircle,
-  Plus
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Stethoscope,
+  UserPlus,
+  Users,
+  X
 } from "lucide-react";
-import { useUser } from "@/context/UserContext";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { BASE_URL } from "@/lib/utils";
 
 // Updated icons for better visual hierarchy
 const roleBasedMenuItems = {
-  Admin: [
-    {
-      name: "Dashboard",
-      path: "/admin/dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
-    },
-    {
-      name: "Hospitals",
-      path: "/admin/hospital-management",
-      icon: <Building className="w-5 h-5" />,
-      subLinks: [
-        { 
-          name: "All Hospitals", 
-          path: "/admin/hospital-management",
-          icon: <Building className="w-4 h-4" /> 
-        },
-        { 
-          name: "Add Hospital", 
-          path: "/admin/hospital-management/add-hospital",
-          icon: <Plus className="w-4 h-4" /> 
-        },
-      ],
-    },
-    {
-      name: "Administrators",
-      path: "/admin/admin-management",
-      icon: <Shield className="w-5 h-5" />,
-    },
-  ],
   Doctor: [
-    {
-      name: "My Dashboard",
-      path: "/doctor/dashboard",
-      icon: <Activity className="w-5 h-5" />,
-    },
     {
       name: "Medical Records",
       path: "/doctor/assigned-records",
@@ -95,24 +54,9 @@ const roleBasedMenuItems = {
           icon: <UserPlus className="w-4 h-4" /> 
         },
       ],
-    },
-    {
-      name: "Patient Records",
-      path: "/hospital-admin/patient-records",
-      icon: <ClipboardEdit className="w-5 h-5" />,
-    },
-    {
-      name: "Audit & Reports",
-      path: "/hospital-admin/audit-logs",
-      icon: <BarChart4 className="w-5 h-5" />,
-    },
+    }
   ],
   Receptionist: [
-    {
-      name: "Reception Desk",
-      path: "/receptionist/dashboard",
-      icon: <ClipboardCheck className="w-5 h-5" />,
-    },
     {
       name: "Patient Registration",
       path: "/receptionist/registration",
@@ -121,22 +65,12 @@ const roleBasedMenuItems = {
   ],
   Triage: [
     {
-      name: "Triage Center",
-      path: "/triage/dashboard",
-      icon: <Activity className="w-5 h-5" />,
-    },
-    {
       name: "Patient Queue",
       path: "/triage/unassigned",
       icon: <ClipboardList className="w-5 h-5" />,
     },
   ],
   LabTechnician: [
-    {
-      name: "Laboratory",
-      path: "/laboratorist/dashboard",
-      icon: <FlaskConical className="w-5 h-5" />,
-    },
     {
       name: "Test Requests",
       path: "/laboratorist/patientList",

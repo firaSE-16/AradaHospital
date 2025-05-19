@@ -81,13 +81,13 @@ const UnassignedPatients = () => {
 
   if (error) {
     return (
-      <div className="p-6 text-center">
-        <div className="mx-auto max-w-md bg-background rounded-lg p-6 shadow-sm border">
+      <div className="p-6 text-center bg-emerald-50 min-h-screen">
+        <div className="mx-auto max-w-md bg-white rounded-lg p-6 shadow-sm border border-emerald-200">
           <h2 className="text-xl font-bold text-destructive mb-4">{error}</h2>
           <Button 
             variant="outline" 
             onClick={fetchPatients}
-            className="mt-2"
+            className="mt-2 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
           >
             Retry Loading Patients
           </Button>
@@ -97,183 +97,180 @@ const UnassignedPatients = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Unassigned Patients</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage patients awaiting assignment to healthcare providers
-          </p>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto bg-emerald-50 min-h-screen">
+      {/* Header Section */}
+      <div className="bg-emerald-100 rounded-xl p-6 shadow-sm border border-emerald-200">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-emerald-900">Unassigned Patients</h1>
+            <p className="text-sm text-emerald-700">
+              Patients awaiting assignment to healthcare providers
+            </p>
+          </div>
         </div>
-        <Button 
-          onClick={() => navigate('/triage/dashboard')}
-          className="shrink-0"
-        >
-          Back to Dashboard
-        </Button>
       </div>
 
-      <div className="bg-background rounded-lg border shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search patients by name, Fayda ID, or contact..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value)
-                setPagination({ ...pagination, page: 1 })
-              }}
-              className="pl-10"
-            />
-          </div>
-          <div className="text-sm text-muted-foreground ml-auto">
-            {!loading && (
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {pagination.total} patients
-              </span>
-            )}
-          </div>
+      {/* Search and Content Section */}
+      <div className="space-y-4">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-emerald-600" />
+          <Input
+            placeholder="Search patients by name, Fayda ID, or contact..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value)
+              setPagination({ ...pagination, page: 1 })
+            }}
+            className="pl-10 bg-white border-emerald-200 focus:ring-emerald-500 focus:border-emerald-500"
+          />
         </div>
 
-        <div className="rounded-lg border overflow-hidden">
-          <Table>
-            <TableHeader className="bg-gray-50/50">
-              <TableRow>
-                <TableHead className="w-[30%]">Patient Information</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Urgency</TableHead>
-                <TableHead>Registration</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`skeleton-${i}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-1">
-                          <Skeleton className="h-4 w-[120px]" />
-                          <Skeleton className="h-3 w-[80px]" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
-                  </TableRow>
-                ))
-              ) : patients.length > 0 ? (
-                patients.map((patient) => (
-                  <TableRow key={patient._id} className="hover:bg-gray-50/50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-medium">
-                          {patient.patientID?.firstName?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {patient.patientID?.firstName || 'Unknown'} {patient.patientID?.lastName || ''}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-xs">
-                              {patient.faydaID}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs">
-                              <User className="h-3 w-3" />
-                              {patient.patientID?.gender || 'Unknown'}
-                            </span>
+        {/* Patients Table Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-emerald-100/50">
+                <TableRow className="hover:bg-emerald-100/50">
+                  <TableHead className="w-[35%] text-emerald-900">Patient</TableHead>
+                  <TableHead className="text-emerald-900">Details</TableHead>
+                  <TableHead className="text-emerald-900">Status</TableHead>
+                  <TableHead className="text-emerald-900 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={`skeleton-${i}`} className="hover:bg-emerald-50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-full bg-emerald-100" />
+                          <div className="space-y-1">
+                            <Skeleton className="h-4 w-[120px] bg-emerald-100" />
+                            <Skeleton className="h-3 w-[80px] bg-emerald-100" />
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-[100px] bg-emerald-100" />
+                          <Skeleton className="h-3 w-[80px] bg-emerald-100" />
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-4 w-[80px] bg-emerald-100" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-8 rounded-md bg-emerald-100 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <TableRow key={patient._id} className="hover:bg-emerald-50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 font-medium">
+                            {patient.patientID?.firstName?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-emerald-900">
+                              {patient.patientID?.firstName || 'Unknown'} {patient.patientID?.lastName || ''}
+                            </p>
+                            <div className="text-xs text-emerald-700">
+                              <span className="font-mono bg-emerald-100 px-1.5 py-0.5 rounded">
+                                {patient.faydaID}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Badge variant={getUrgencyBadgeVariant(patient.triageData?.urgency)} className="capitalize">
+                              {patient.triageData?.urgency || 'Unknown'}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize border-emerald-200 text-emerald-800">
+                              {patient.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-emerald-700">
+                            <Calendar className="h-3 w-3" />
+                            <span>{new Date(patient.createdAt).toLocaleDateString()}</span>
+                            <Clock className="h-3 w-3 ml-1" />
+                            <span>{new Date(patient.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm text-emerald-800">
+                          <User className="h-4 w-4" />
+                          <span>{patient.patientID?.gender || 'Unknown'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleViewPatient(patient._id)}
+                          className="hover:bg-emerald-100 text-emerald-600 hover:text-emerald-700"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-3">
+                        <Search className="h-10 w-10 text-emerald-400" />
+                        <p className="text-emerald-700">No unassigned patients found</p>
+                        {searchTerm && (
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setSearchTerm("")}
+                            className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                          >
+                            Clear search filters
+                          </Button>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {patient.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getUrgencyBadgeVariant(patient.triageData?.urgency)} className="capitalize">
-                        {patient.triageData?.urgency || 'Unknown'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {new Date(patient.createdAt).toLocaleDateString()}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(patient.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleViewPatient(patient._id)}
-                        className="hover:bg-primary/10 hover:text-primary"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12">
-                    <div className="flex flex-col items-center gap-3">
-                      <Search className="h-10 w-10 text-gray-400" />
-                      <p className="text-gray-500">No unassigned patients found</p>
-                      {searchTerm && (
-                        <Button variant="outline" onClick={() => setSearchTerm("")}>
-                          Clear search filters
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {patients.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
-              <span>
-                Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}-{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span> patients
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium">
-                Page {pagination.page} of {pagination.pages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
+
+          {/* Pagination */}
+          {patients.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-emerald-200">
+              <div className="text-sm text-emerald-700">
+                Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}-{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium text-emerald-800">
+                  Page {pagination.page} of {pagination.pages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

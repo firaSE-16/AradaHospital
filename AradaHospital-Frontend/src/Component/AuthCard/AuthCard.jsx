@@ -134,13 +134,13 @@ function AuthCard() {
     case "HospitalAdministrator":
       return "/hospital-admin/dashboard";
     case "Receptionist":
-      return "/receptionist/dashboard";
+      return "/receptionist/registration";
     case "Doctor":
-      return "/doctor/dashboard";
+      return "/doctor/assigned-records";
     case "Triage":
-      return "/triage/dashboard";
+      return "/triage/unassigned";
     case "LabTechnician":
-      return "/laboratorist/dashboard";
+      return "/laboratorist/patientList";
     default:
       return "/"; // Fallback to home for unknown roles
   }
